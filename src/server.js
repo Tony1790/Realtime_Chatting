@@ -1,6 +1,6 @@
 import http from "http";
 import express from "express";
-import WebSocket from "ws";
+import { Server } from "socket.io";
 
 const app = express();
 
@@ -20,14 +20,23 @@ const PORT = process.env.PORT || 3000;
 const handleListen = () =>
   console.log(`✅✅✅Listening on http://localhost:${PORT} 🤖🤖🤖`);
 
-const server = http.createServer(app);
+const httpServer = http.createServer(app);
 //http server
-const wss = new WebSocket.Server({ server });
+const wsServer = new Server(httpServer);
 //websoket server
 
+wsServer.on("connection", (socket) => {
+  socket.on("enter_room", (roomName, done) => {
+    socket.join(roomName);
+    done();
+  });
+});
+
+/*
 function onSocketClose() {
   console.log("Disconnected from Browser❌");
 }
+
 const sockets = [];
 
 wss.on("connection", (socket) => {
@@ -38,17 +47,18 @@ wss.on("connection", (socket) => {
   socket.on("message", (message) => {
     const convertedToStringMsg = message.toString("utf8");
     const parsed = JSON.parse(convertedToStringMsg);
-    console.log(parsed);
     switch (parsed.type) {
       case "new_message":
         sockets.forEach((aSocket) =>
           aSocket.send(`${socket.nickname}: ${parsed.payload}`)
         );
+        break;
       case "nickname":
         socket["nickname"] = parsed.payload;
+        break;
     }
   });
 });
 //백엔드의 소켓은 연결된 브라우저를 뜻한다
-
-server.listen(PORT, handleListen);
+*/
+httpServer.listen(PORT, handleListen);
