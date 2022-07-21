@@ -33,11 +33,20 @@ function onSocketClose() {
 
 wss.on("connection", (socket) => {
   sockets.push(socket);
+  socket["nickname"] = "anonymous";
   console.log("connected to Browser✅");
   socket.on("close", onSocketClose);
   socket.on("message", (message) => {
-    const translatedMessageData = message.toString("utf8");
-    sockets.forEach((aSocket) => aSocket.send(translatedMessageData));
+    const convertedToStringMsg = message.toString("utf8");
+    const parsed = JSON.parse(convertedToStringMsg);
+    switch (parsed.type) {
+      case "new_message":
+        sockets.forEach((aSocket) =>
+          aSocket.send(`${socket.nickname}: ${parsed.payload}`)
+        );
+      case "nickname":
+        socket["nickname"] = parsed.payload;
+    }
   });
 });
 //백엔드의 소켓은 연결된 브라우저를 뜻한다
