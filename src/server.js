@@ -25,11 +25,10 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 //websoket server
 
-const sockets = [];
-
 function onSocketClose() {
   console.log("Disconnected from Browser❌");
 }
+const sockets = [];
 
 wss.on("connection", (socket) => {
   sockets.push(socket);
@@ -39,6 +38,7 @@ wss.on("connection", (socket) => {
   socket.on("message", (message) => {
     const convertedToStringMsg = message.toString("utf8");
     const parsed = JSON.parse(convertedToStringMsg);
+    console.log(parsed);
     switch (parsed.type) {
       case "new_message":
         sockets.forEach((aSocket) =>
