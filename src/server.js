@@ -37,6 +37,10 @@ function publicRooms() {
   return publicRooms;
 }
 
+function countRoom(roomName) {
+  return wsServer.sockets.adapter.rooms.get(roomName)?.size;
+}
+
 wsServer.on("connection", (socket) => {
   socket.onAny((event) => {
     console.log(`Socket Event:${event}`);
@@ -46,13 +50,16 @@ wsServer.on("connection", (socket) => {
     socket["nickname"] = NicknameInputValue;
     socket.join(roomName);
     done();
-    socket.to(roomName).emit("welcome", socket.nickname);
+    socket.to(roomName).emit("welcome", socket.nickname, countRoom(roomName));
     wsServer.sockets.emit("room_change", publicRooms());
   });
   socket.on("disconnecting", () => {
     socket.rooms.forEach((room) =>
-      socket.to(room).emit("bye", socket.nickname)
+      socket.to(room).emit("bye", socket.nickname, countRoom(room) - 1)
     );
+  });
+  socket.on("disconnect", () => {
+    wsServer.sockets.emit("room_change", publicRooms());
   });
   socket.on("new_message", (msg, roomName, done) => {
     socket.to(roomName).emit("new_message", `${socket.nickname}: ${msg}`);
@@ -60,35 +67,6 @@ wsServer.on("connection", (socket) => {
   });
 });
 
-/*
-function onSocketClose() {
-    console.log("Disconnected from Browser❌");
-}
-
-const sockets = [];
-
-wss.on("connection", (socket) => {
-    sockets.push(socket);
-    socket["nickname"] = "anonymous";
-    console.log("connected to Browser✅");
-    socket.on("close", onSocketClose);
-    socket.on("message", (message) => {
-        const convertedToStringMsg = message.toString("utf8");
-        const parsed = JSON.parse(convertedToStringMsg);
-        switch (parsed.type) {
-            case "new_message":
-                sockets.forEach((aSocket) =>
-                aSocket.send(`${socket.nickname}: ${parsed.payload}`)
-                );
-                break;
-                case "nickname":
-                    socket["nickname"] = parsed.payload;
-                    break;
-                }
-            });
-        });
-        //백엔드의 소켓은 연결된 브라우저를 뜻한다
-        */
 const handleListen = () =>
   console.log(`✅✅✅Listening on http://localhost:${PORT} 🤖🤖🤖`);
 
