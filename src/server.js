@@ -1,6 +1,7 @@
 import http from "http";
 import express from "express";
 import { Server } from "socket.io";
+import { instrument } from "@socket.io/admin-ui";
 
 const app = express();
 
@@ -19,8 +20,16 @@ const PORT = process.env.PORT || 3000;
 
 const httpServer = http.createServer(app);
 //http server
-const wsServer = new Server(httpServer);
+const wsServer = new Server(httpServer, {
+  cors: {
+    origin: ["https://admin.socket.io"],
+    credentials: true,
+  },
+});
 //websoket server
+instrument(wsServer, {
+  auth: false,
+});
 
 function publicRooms() {
   const {
